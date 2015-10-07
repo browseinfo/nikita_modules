@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+        <record id="view_stock_product_tree" model="ir.ui.view">
+            <field name="name">product.stock.tree.inherit</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_product_tree_view"/>
+            <field name="arch" type="xml">
+                <tree position="attributes">
+                    <attribute name="colors">{'red':virtual_available&lt;0, 'blue':virtual_available&gt;=0 and state in ('draft', 'end', 'obsolete'), 'black':virtual_available&gt;=0 and state not in ('draft', 'end', 'obsolete')}</attribute>
+                </tree>
+                <field name="price" position="after">
+                    <field name="qty_available"/>
+                    <field name="virtual_available"/>
+                </field>
+            </field>
+        </record>
+
+        <record id="view_stock_product_template_tree" model="ir.ui.view">
+            <field name="name">product.template.stock.tree.inherit</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_tree_view"/>
+            <field name="arch" type="xml">
+                <tree position="attributes">
+                    <attribute name="colors">red:virtual_available&lt;0;blue:virtual_available&gt;=0 and state in ('draft', 'end', 'obsolete');black:virtual_available&gt;=0 and state not in ('draft', 'end', 'obsolete')</attribute>
+                </tree>
+                <field name="uom_id" position="after">
+                    <field name="qty_available"/>
+                    <field name="virtual_available"/>
+                </field>
+            </field>
+        </record>
+
+        <record id="view_template_property_form" model="ir.ui.view">
+            <field name="name">product.template.stock.property.form.inherit</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_form_view"/>
+            <field name="arch" type="xml">
+                <group name="sale_condition" position="inside">
+                    <label for="sale_delay"/>
+                    <div>
+                        <field name="sale_delay" attrs="{'readonly':[('sale_ok','=',False)]}" class="oe_inline" style="vertical-align:baseline"/> days
+                    </div>
+                </group>
+                <group name="status" position="before">
+                    <group string="Stock and Expected Variations" attrs="{'invisible': [('type', '=', 'service')]}" groups="base.group_user">
+                        <label for="qty_available"/>
+                            <div>
+                                <field name="qty_available" class="oe_inline"/>
+                                <button name="%(action_view_change_product_quantity)d" string="⇒ Update"
+                                    type="action"
+                                    class="oe_link"/>
+                            </div>
+                        <label for="incoming_qty"/>
+                            <div>
+                                <field name="incoming_qty" class="oe_inline"/>
+                                <button string="⇒ Request Procurement" name="%(stock.act_make_procurement)d" type="action" class="oe_link"/>
+                            </div>
+                        <field name="virtual_available"/>
+                    </group>
+                </group>
+                <group name="status" position="after">
+                    <group name="store" string="Storage Location" attrs="{'invisible':[('type','=','service')]}">
+                        <field name="loc_rack"/>
+                        <field name="loc_row"/>
+                        <field name="loc_case"/>
+                    </group>
+                </group>
+                <group name="status" position="before">
+                    <group name="lot" groups="stock.group_production_lot" string="Lots" attrs="{'invisible':[('type','=','service')]}">
+                        <field name="track_all" groups="stock.group_production_lot"/>
+                        <field name="track_incoming" groups="stock.group_production_lot" attrs="{'invisible': [('track_all', '=', True)]}"/>
+                        <field name="track_outgoing" groups="stock.group_production_lot" attrs="{'invisible': [('track_all', '=', True)]}"/>
+                    </group>
+                </group>
+                <group name="weight" position="before">
+                    <group name="store" groups="stock.group_locations" string="Counter-Part Locations Properties" attrs="{'invisible':[('type','=','service')]}">
+                        <field name="property_stock_procurement" domain="[('usage','=','procurement')]"/>
+                        <field name="property_stock_production" domain="[('usage','=','production')]"/>
+                        <field name="property_stock_inventory" domain="[('usage','=','inventory')]"/>
+                    </group>
+                </group>
+                <field name="product_manager" position="attributes">
+                    <attribute name="context">{'default_groups_ref': ['base.group_user', 'base.group_sale_manager', 'stock.group_stock_manager']}</attribute>
+                </field>
+                <group name="procurement_uom" position="after" >
+                   <group string="Supply Chain Information" attrs="{'invisible': [('type', '=', 'service')]}" groups="base.group_user">
+                       <field name="route_ids" widget="many2many_checkboxes"/>
+                   </group>
+                </group>
+            </field>
+        </record>
+
+
+
+        <record model="ir.ui.view" id="product_template_kanban_stock_view">
+            <field name="name">Product Template Kanban Stock</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_kanban_view"/>
+            <field name="arch" type="xml">
+                <field name="lst_price" position="after">
+                    <field name="type"/>
+                </field>
+                <ul position="inside">
+                    <li t-if="record.type.raw_value != 'service'">On hand: <field name="qty_available"/> <field name="uom_id"/></li>
+                    <li t-if="record.type.raw_value != 'service'">Forecasted: <field name="virtual_available"/> <field name="uom_id"/></li>
+                </ul>
+            </field>
+        </record>
+
+    </data>
+</openerp>
